@@ -75,6 +75,7 @@ import examples.automated_deep_compression as adc
 from distiller.models import ALL_MODEL_NAMES, create_model
 import parser
 import operator
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 
 # Logger handle
@@ -136,8 +137,20 @@ def main():
             torch.cuda.set_device(args.gpus[0])
 
     # Infer the dataset from the model name
-    args.dataset = 'cifar10' if 'cifar' in args.arch else 'imagenet'
-    args.num_classes = 10 if args.dataset == 'cifar10' else 1000
+    #args.dataset = 'cifar10' if 'cifar' in args.arch else 'imagenet'
+    if 'cifar' in args.arch:
+        args.dataset = 'cifar10'
+    elif 'tiny_imagenet' in args.arch:
+        args.dataset = 'tiny_imagenet'
+    else:
+        args.dataset = 'imagenet'
+    #args.num_classes = 10 if args.dataset == 'cifar10' else 1000
+    if args.dataset == 'cifar10':
+        args.num_classes = 10
+    elif args.dataset == 'tiny_imagenet':
+        args.num_classes = 200
+    else:
+        args.num_classes = 1000
 
     if args.earlyexit_thresholds:
         args.num_exits = len(args.earlyexit_thresholds) + 1
@@ -352,6 +365,7 @@ def train(train_loader, model, criterion, optimizer, epoch,
         # Measure data loading time
         data_time.add(time.time() - end)
         inputs, target = inputs.to(args.device), target.to(args.device)
+        #print('target: {}'.format(target))
 
         # Execute the forward phase, compute the output and measure loss
         if compression_scheduler:

@@ -32,7 +32,7 @@ import distiller
 
 msglogger = logging.getLogger()
 
-DATASETS_NAMES = ['imagenet', 'cifar10']
+DATASETS_NAMES = ['imagenet', 'cifar10', 'tiny_imagenet']
 
 
 def load_data(dataset, data_dir, batch_size, workers, validation_split=0.1, deterministic=False,
@@ -53,10 +53,40 @@ def load_data(dataset, data_dir, batch_size, workers, validation_split=0.1, dete
     """
     if dataset not in DATASETS_NAMES:
         raise ValueError('load_data does not support dataset %s" % dataset')
-    datasets_fn = cifar10_get_datasets if dataset == 'cifar10' else imagenet_get_datasets
+    #datasets_fn = cifar10_get_datasets if dataset == 'cifar10' else imagenet_get_datasets
+    # edits by: sms821
+    if dataset == 'cifar10':
+        datasets_fn = cifar10_get_datasets
+    elif dataset == 'tiny_imagenet':
+        datasets_fn = tiny_imagenet_get_datasets
     return get_data_loaders(datasets_fn, data_dir, batch_size, workers, validation_split=validation_split,
                             deterministic=deterministic, effective_train_size=effective_train_size,
                             effective_valid_size=effective_valid_size, effective_test_size=effective_test_size)
+
+
+def tiny_imagenet_get_datasets(data_dir):
+    """Load the tiny_imagenet dataset.
+    """
+    train_dir = os.path.join(data_dir, 'train')
+    test_dir = os.path.join(data_dir, 'val')
+    normalize = transforms.Normalize(mean=[0.4802, 0.448, 0.397],
+                                     std=[0.277, 0.269, 0.282])
+    train_transform = transforms.Compose([
+        transforms.RandomResizedCrop(64),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        normalize,
+    ])
+    train_dataset = datasets.ImageFolder(train_dir, train_transform)
+
+    test_transform = transforms.Compose([
+        transforms.ToTensor(),
+        normalize,
+    ])
+
+    test_dataset = datasets.ImageFolder(test_dir, test_transform)
+
+    return train_dataset, test_dataset
 
 
 def cifar10_get_datasets(data_dir):

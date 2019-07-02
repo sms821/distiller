@@ -20,6 +20,7 @@ import torch
 import torchvision.models as torch_models
 from . import cifar10 as cifar10_models
 from . import imagenet as imagenet_extra_models
+from . import tiny_imagenet as tiny_imagenet_models
 import pretrainedmodels
 
 import logging
@@ -41,11 +42,17 @@ CIFAR10_MODEL_NAMES = sorted(name for name in cifar10_models.__dict__
                              if name.islower() and not name.startswith("__")
                              and callable(cifar10_models.__dict__[name]))
 
+TINY_IMAGENET_MODEL_NAMES = sorted(name for name in tiny_imagenet_models.__dict__
+                                  if name.islower() and not name.startswith("__")
+                                  and callable(tiny_imagenet_models.__dict__[name]))
+
 ALL_MODEL_NAMES = sorted(map(lambda s: s.lower(),
-                            set(IMAGENET_MODEL_NAMES + CIFAR10_MODEL_NAMES)))
+                            set(IMAGENET_MODEL_NAMES + CIFAR10_MODEL_NAMES + TINY_IMAGENET_MODEL_NAMES)))
+                            #set(IMAGENET_MODEL_NAMES + CIFAR10_MODEL_NAMES)))
 
 
 def create_model(pretrained, dataset, arch, parallel=True, device_ids=None):
+    #print("dataset in create_model: {}".format(dataset))
     """Create a pytorch model based on the model architecture and dataset
 
     Args:
@@ -90,6 +97,12 @@ def create_model(pretrained, dataset, arch, parallel=True, device_ids=None):
         except KeyError:
             raise ValueError("Model {} is not supported for dataset CIFAR10".format(arch))
         msglogger.info("=> creating %s model for CIFAR10" % arch)
+    elif dataset == 'tiny_imagenet':
+        try:
+            model = tiny_imagenet_models.__dict__[arch]()
+        except KeyError:
+            raise ValueError("Model {} is not supported for dataset Tiny Imagenet".format(arch))
+        msglogger.info("=> creating %s model for Tiny Imagenet" % arch)
     else:
         raise ValueError('Could not recognize dataset {}'.format(dataset))
 
